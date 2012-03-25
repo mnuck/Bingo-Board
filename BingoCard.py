@@ -47,6 +47,7 @@ class BingoCard():
 
 from random import Random
 from copy import deepcopy
+from math import ceil
 
 class BingoCardFactory():
     """
@@ -59,9 +60,9 @@ class BingoCardFactory():
         self.rng.seed(seed)
 
     def createBingoCard(self):
-        data = deepcopy(self.data)
+        data = deepcopy(self.data) * int(ceil( len(self.data) / float(self.size*self.size)))
         self.rng.shuffle(data)
         return BingoCard(self.size, data)
 
     def createBingoCards(self, num=10):
-        return [self.genCard() for i in xrange(num)]
+        return [self.createBingoCard() for i in xrange(num)]
