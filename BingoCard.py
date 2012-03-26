@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 class GridBox():
-    def __init__(self, data=None):
+    def __init__(self, data=None, loc=0):
         self.mark = False
         self.data = data
+        self.loc = loc
 
 
+from copy import deepcopy
+        
 class BingoCard():
     """
     A single bingo card
@@ -19,11 +22,22 @@ class BingoCard():
     def markLoc(self, x, y):
         self.card[x + y*self.size].mark = True
     
-    def mark(self, item):
-        for box in self.card:
-            if item == self.card.data:
-                box.mark = True
+    def match(self, item):
+        return [x for x in self.card if x.data == item]
     
+    def mark(self, item):
+        def m(item):
+            m.mark = True
+        [m(x) for x in self.match(item)]
+    
+    def multiplicativeMark(self, item):
+        """ Makes new card[s] """
+        result = list()
+        for loc in  [x.loc for x in self.match(item) if not x.mark]:
+            result.append(deepcopy(self))
+            result[-1].card[loc] = True
+        return result
+        
     def bingo(self):
         for i in xrange(self.size):
             start  = i * self.size
@@ -44,9 +58,29 @@ class BingoCard():
             result += "\n"
         return result
 
+    
+class NonDeterministicFiniteStateBingoPlayer():
+    """
+    Given a bingo card with repeats, makes all possible choices
+    simultaneously. Accomplishes this task by multiplying his card.
+    """
+    def __init__(self, card):
+        self.cards = [card]
+    
+    def bingo(self):
+        return any([card.bingo() for card in self.cards])
+
+    def bingos(self):
+        return [x for x in self.cards if x.bingo()]
+    
+    def mark(self, item):
+        newCards = list()
+        for card in self.cards:
+            newCards += card.multiplicativeMark(item)
+        self.cards = list(set(newCards))
+    
 
 from random import Random
-from copy import deepcopy
 from math import ceil
 
 class BingoCardFactory():
