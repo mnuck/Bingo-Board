@@ -5,6 +5,9 @@ class GridBox():
         self.mark = False
         self.data = data
         self.loc = loc
+    
+    def __str__(self):
+        return str(self.data)
 
 
 from copy import deepcopy
@@ -15,12 +18,9 @@ class BingoCard():
     """
     def __init__(self, size=5, data=range(1,50)):
         self.size = size
-        self.card = [GridBox(item) 
-                     for (_,item) 
+        self.card = [GridBox(item,loc) 
+                     for (loc,item) 
                      in zip(xrange(size*size),data)]
-        
-    def markLoc(self, x, y):
-        self.card[x + y*self.size].mark = True
     
     def match(self, item):
         return [x for x in self.card if x.data == item]
@@ -35,7 +35,8 @@ class BingoCard():
         result = list()
         for loc in  [x.loc for x in self.match(item) if not x.mark]:
             result.append(deepcopy(self))
-            result[-1].card[loc] = True
+            result[-1].card[loc].data = "*"
+            result[-1].card[loc].mark = True
         return result
         
     def bingo(self):
@@ -58,7 +59,6 @@ class BingoCard():
             result += "\n"
         return result
 
-    
 class NonDeterministicFiniteStateBingoPlayer():
     """
     Given a bingo card with repeats, makes all possible choices
@@ -77,11 +77,11 @@ class NonDeterministicFiniteStateBingoPlayer():
         newCards = list()
         for card in self.cards:
             newCards += card.multiplicativeMark(item)
-        self.cards = list(set(newCards))
+        self.cards = newCards
+NDFSBingoPlayer = NonDeterministicFiniteStateBingoPlayer    
     
 
 from random import Random
-from math import ceil
 
 class BingoCardFactory():
     """
@@ -94,7 +94,9 @@ class BingoCardFactory():
         self.rng.seed(seed)
 
     def createBingoCard(self):
-        data = deepcopy(self.data) * int(ceil( len(self.data) / float(self.size*self.size)))
+        data = list()
+        while len(data) < (self.size*self.size):
+            data += self.data
         self.rng.shuffle(data)
         return BingoCard(self.size, data)
 
